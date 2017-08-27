@@ -5,9 +5,14 @@ import android.widget.Button;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.yuanshenbin.base.BaseMVPActivity;
 import com.yuanshenbin.bean.PuBuLiuModel;
+import com.yuanshenbin.bean.TestEvent;
 import com.yuanshenbin.mvp.constant.MvpTag;
 import com.yuanshenbin.mvp.contract.LoginContract;
 import com.yuanshenbin.mvp.presenter.LoginPresenterImpl;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import io.reactivex.annotations.NonNull;
@@ -17,7 +22,7 @@ import io.reactivex.functions.Consumer;
  * Created by Jacky on 2016/12/12.
  */
 
-public class LoginActivity extends BaseMVPActivity<LoginContract.View ,LoginPresenterImpl> implements LoginContract.View {
+public class LoginActivity extends BaseMVPActivity<LoginContract.View, LoginPresenterImpl> implements LoginContract.View {
     @BindView(R.id.btn1)
     Button vBtn1;
     @BindView(R.id.btn2)
@@ -26,6 +31,10 @@ public class LoginActivity extends BaseMVPActivity<LoginContract.View ,LoginPres
     Button vBtn3;
 
 
+    @Override
+    protected boolean isEventBug() {
+        return true;
+    }
 
     @Override
     protected int initLayoutId() {
@@ -34,7 +43,7 @@ public class LoginActivity extends BaseMVPActivity<LoginContract.View ,LoginPres
 
     @Override
     protected void initDatas() {
-
+        IShowToast("initDatas");
     }
 
     @Override
@@ -98,6 +107,14 @@ public class LoginActivity extends BaseMVPActivity<LoginContract.View ,LoginPres
     @Override
     public void onShowToast(String msg) {
         IShowToast(msg);
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    public void BusTest(TestEvent testEvent) {
+
+        IShowToast("BusTest");
+        EventBus.getDefault().removeStickyEvent(testEvent);
     }
 
     @Override

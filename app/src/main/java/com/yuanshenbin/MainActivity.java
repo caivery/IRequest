@@ -7,10 +7,13 @@ import android.view.View;
 
 import com.yanzhenjie.nohttp.Headers;
 import com.yanzhenjie.nohttp.download.DownloadListener;
+import com.yuanshenbin.bean.TestEvent;
 import com.yuanshenbin.network.AbstractResponse;
 import com.yuanshenbin.network.AbstractResponseUpload;
 import com.yuanshenbin.network.ResponseEnum;
 import com.yuanshenbin.network.request.IRequest;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 
@@ -145,7 +148,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                
+
+
+                EventBus.getDefault().postSticky(new TestEvent());
                 
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
             }

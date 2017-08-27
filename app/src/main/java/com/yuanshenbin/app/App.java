@@ -7,10 +7,10 @@ import com.orhanobut.logger.FormatStrategy;
 import com.orhanobut.logger.PrettyFormatStrategy;
 import com.yanzhenjie.nohttp.InitializationConfig;
 import com.yanzhenjie.nohttp.Logger;
-import com.yanzhenjie.nohttp.NoHttp;
 import com.yanzhenjie.nohttp.OkHttpNetworkExecutor;
 import com.yanzhenjie.nohttp.cache.DBCacheStore;
 import com.yanzhenjie.nohttp.cookie.DBCookieStore;
+import com.yuanshenbin.network.request.IRequest;
 
 /**
  * Created by Jacky on 2016/10/31.
@@ -46,9 +46,8 @@ public class App extends Application {
                 .retry(1) // 全局重试次数，配置后每个请求失败都会重试x次。
                 .build();
 
-        NoHttp.initialize(config);
 
-
+        IRequest.initialize(this);
         Logger.setDebug(true);
 
         FormatStrategy formatStrategy = PrettyFormatStrategy.newBuilder()

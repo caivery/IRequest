@@ -25,7 +25,7 @@ import com.yuanshenbin.network.ResponseEnum;
 import com.yuanshenbin.network.SSLContextUtil;
 import com.yuanshenbin.util.ILogger;
 import com.yuanshenbin.util.JsonUtils;
-import com.yuanshenbin.widget.LoadingDialog;
+import com.yuanshenbin.widget.DefaultDialog;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -46,12 +46,19 @@ import io.reactivex.annotations.NonNull;
  */
 public class RequestManager {
 
+
+    private static IDialog iDialog = new DefaultDialog();
+
+    public static void setDialog(IDialog dialog) {
+        iDialog = dialog;
+    }
+
     /**
      * rx需要用的线程池
      *
      * @return
      */
-    public static ExecutorService getQueue() {
+    private static ExecutorService getQueue() {
         return Queue.mExecutorService;
     }
 
@@ -68,7 +75,7 @@ public class RequestManager {
      *
      * @return
      */
-    static RequestQueue getInstance() {
+  private   static RequestQueue getInstance() {
         if (mRequestQueue == null) {
             synchronized (RequestManager.class) {
                 mRequestQueue = NoHttp.newRequestQueue(5);
@@ -83,7 +90,7 @@ public class RequestManager {
      *
      * @return
      */
-    static DownloadQueue getInstance1() {
+    private static DownloadQueue getInstance1() {
         if (mDownloadQueue == null) {
             synchronized (RequestManager.class) {
                 mDownloadQueue = NoHttp.newDownloadQueue(5);
@@ -138,7 +145,7 @@ public class RequestManager {
     public static <T> Observable<T> upload(final BaseRequest params, final Class<T> classOfT) {
         //放到线程池中，实现队列
         getQueue().submit(new RequestThreadQueue(params));
-        return  Observable.create(new ObservableOnSubscribe<T>() {
+        return Observable.create(new ObservableOnSubscribe<T>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
                 try {
@@ -185,7 +192,7 @@ public class RequestManager {
     public static <T> Observable<T> load(final BaseRequest params, final Class<T> classOfT) {
         //放到线程池中，实现队列
         getQueue().submit(new RequestThreadQueue(params));
-        return  Observable.create(new ObservableOnSubscribe<T>() {
+        return Observable.create(new ObservableOnSubscribe<T>() {
             @Override
             public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
                 try {
@@ -211,7 +218,7 @@ public class RequestManager {
                         String json = response.get();
                         ILogger.json(json);
                         if (classOfT.equals(String.class)) {
-                            e.onNext((T) json); 
+                            e.onNext((T) json);
                         } else {
                             e.onNext(JsonUtils.object(json, classOfT));
                         }
@@ -247,11 +254,10 @@ public class RequestManager {
         }
 
 
-        final IDialog dialog = new LoadingDialog();
-        dialog.init(params.context);
-        dialog.setCancelable(params.isCloseDialog);
+        iDialog.init(params.context);
+        iDialog.setCancelable(params.isCloseDialog);
         if (!TextUtils.isEmpty(params.loadingTitle)) {
-            dialog.setMessage(params.loadingTitle);
+            iDialog.setMessage(params.loadingTitle);
         }
         SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();
         if (sslContext != null) {
@@ -272,8 +278,8 @@ public class RequestManager {
             public void onStart(int what) {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.开始);
-                    if (dialog != null && params.isLoading)
-                        dialog.show();
+                    if (iDialog != null && params.isLoading)
+                        iDialog.show();
                 }
             }
 
@@ -300,8 +306,8 @@ public class RequestManager {
             public void onFinish(int what) {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.结束);
-                    if (dialog != null && params.isLoading)
-                        dialog.dismiss();
+                    if (iDialog != null && params.isLoading)
+                        iDialog.dismiss();
                 }
             }
         });
@@ -452,19 +458,18 @@ public class RequestManager {
          */
         //getHeader(request);
         request.setTag(params.context);
-        final IDialog dialog = new LoadingDialog();
-        dialog.init(params.context);
-        dialog.setCancelable(params.isCloseDialog);
+        iDialog.init(params.context);
+        iDialog.setCancelable(params.isCloseDialog);
         if (!TextUtils.isEmpty(params.loadingTitle)) {
-            dialog.setMessage(params.loadingTitle);
+            iDialog.setMessage(params.loadingTitle);
         }
         getInstance().add(params.what, request, new OnResponseListener<T>() {
             @Override
             public void onStart(int what) {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.开始);
-                    if (dialog != null && params.isLoading)
-                        dialog.show();
+                    if (iDialog != null && params.isLoading)
+                        iDialog.show();
                 }
             }
 
@@ -491,8 +496,8 @@ public class RequestManager {
             public void onFinish(int what) {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.结束);
-                    if (dialog != null && params.isLoading)
-                        dialog.dismiss();
+                    if (iDialog != null && params.isLoading)
+                        iDialog.dismiss();
                 }
             }
         });

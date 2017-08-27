@@ -17,7 +17,7 @@ import com.yuanshenbin.network.IDialog;
  * Created by yuanshenbin on 2017/6/22.
  */
 
-public class LoadingDialog implements IDialog {
+public class DefaultDialog implements IDialog {
     private LayoutInflater inflater;
     private WindowManager.LayoutParams lp;
     private TextView loadtext;
@@ -50,6 +50,7 @@ public class LoadingDialog implements IDialog {
     public void dismiss() {
         if (mDialog != null && isShowing()) {
             mDialog.dismiss();
+            mDialog = null;
         }
     }
 

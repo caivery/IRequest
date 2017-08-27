@@ -21,9 +21,7 @@ public class LoginModelImpl implements LoginContract.Model{
     public Observable<PuBuLiuModel> getLogin1(String account, String pass) {
 
 
-        String mUrl = "http://image.baidu.com/channel/listjson?pn=" + 1
-                + "&rn=" + 22
-                + "&tag1=%E6%98%8E%E6%98%9F&tag2=%E5%85%A8%E9%83%A8";
+        String mUrl = "http://image.baidu.com/channel/listjson?pn=1&rn=122&tag1=%E6%98%8E%E6%98%9F&tag2=%E5%85%A8%E9%83%A8";
         return IRequestRx.get(mUrl)
                 .execute(PuBuLiuModel.class);
     }

@@ -6,7 +6,7 @@ import android.widget.Toast;
 
 import com.yuanshenbin.network.IDialog;
 import com.yuanshenbin.util.ILogger;
-import com.yuanshenbin.widget.LoadingDialog;
+import com.yuanshenbin.widget.DefaultDialog;
 
 import java.io.IOException;
 
@@ -64,7 +64,7 @@ public abstract class NetObserver<T> implements Observer<T> {
      */
     private void showLoading() {
         if (isLoading) {
-            mDialog = new LoadingDialog();
+            mDialog = new DefaultDialog();
             mDialog.init(mContext);
             mDialog.show();
         }
