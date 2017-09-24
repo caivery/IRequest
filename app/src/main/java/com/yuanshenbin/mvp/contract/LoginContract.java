@@ -1,6 +1,7 @@
 package com.yuanshenbin.mvp.contract;
 
 
+import com.yuanshenbin.base.BaseView;
 import com.yuanshenbin.bean.PuBuLiuModel;
 
 import io.reactivex.Observable;
@@ -12,7 +13,7 @@ import io.reactivex.Observable;
 public class LoginContract {
 
 
-    public interface View extends BaseContract.View {
+    public interface View extends BaseView {
         /**
          * 登陆
          *
