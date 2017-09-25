@@ -75,7 +75,7 @@ public class RequestManager {
      *
      * @return
      */
-  private   static RequestQueue getInstance() {
+    private static RequestQueue getInstance() {
         if (mRequestQueue == null) {
             synchronized (RequestManager.class) {
                 mRequestQueue = NoHttp.newRequestQueue(5);

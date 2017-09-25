@@ -43,7 +43,7 @@ public class App extends Application {
                 .networkExecutor(new OkHttpNetworkExecutor())
                 // 全局通用Header，add是添加，多次调用add不会覆盖上次add。
                 // 全局通用Param，add是添加，多次调用add不会覆盖上次add。
-                .retry(1) // 全局重试次数，配置后每个请求失败都会重试x次。
+                .retry(3) // 全局重试次数，配置后每个请求失败都会重试x次。
                 .build();
 
 

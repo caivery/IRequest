@@ -11,7 +11,6 @@ import com.yuanshenbin.widget.DefaultDialog;
 import java.io.IOException;
 
 import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 
 /**
  * Created by yuanshenbin on 2017/7/6.
@@ -26,19 +25,8 @@ public abstract class NetObserver<T> implements Observer<T> {
     public NetObserver(Context context, boolean loading) {
         isLoading = loading;
         this.mContext = context;
-    }
-
-    @Override
-    public void onSubscribe(Disposable d) {
-        _onSubscribe(d);
         showLoading();
     }
-
-    @Override
-    public void onNext(T t) {
-        _onNext(t);
-    }
-
     @Override
     public void onError(Throwable e) {
         //统一处理请求异常的情况
@@ -49,9 +37,6 @@ public abstract class NetObserver<T> implements Observer<T> {
         }
         ILogger.e("rx", e);
 
-        _onError(e);
-
-        cancelLoading();
     }
 
     @Override
@@ -74,11 +59,5 @@ public abstract class NetObserver<T> implements Observer<T> {
         if (mDialog != null)
             mDialog.dismiss();
     }
-
-    public abstract void _onSubscribe(Disposable d);
-
-    public abstract void _onNext(T result);
-
-    public abstract void _onError(Throwable e);
 
 }

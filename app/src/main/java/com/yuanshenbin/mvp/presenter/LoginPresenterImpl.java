@@ -8,6 +8,7 @@ import com.yuanshenbin.mvp.contract.LoginContract;
 import com.yuanshenbin.mvp.model.LoginModelImpl;
 import com.yuanshenbin.rx.NetObserver;
 
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -68,18 +69,13 @@ public class LoginPresenterImpl extends BasePresenter<LoginContract.View> implem
     public void getVerification3(String account, String pass) {
         append(mModel.getVerification3(account, pass), new NetObserver<PuBuLiuModel>(mContext, true) {
             @Override
-            public void _onSubscribe(Disposable d) {
-                mDisposable.add(d);
+            public void onSubscribe(@NonNull Disposable d) {
+                
             }
 
             @Override
-            public void _onNext(PuBuLiuModel result) {
-                mView.onVerification3(result);
-            }
+            public void onNext(@NonNull PuBuLiuModel puBuLiuModel) {
 
-            @Override
-            public void _onError(Throwable e) {
-                mView.onError(MvpTag.TAG3);
             }
         });
     }
