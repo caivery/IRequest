@@ -20,7 +20,9 @@ import com.yanzhenjie.nohttp.rest.SyncRequestExecutor;
 import com.yuanshenbin.bean.UploadFile;
 import com.yuanshenbin.network.AbstractResponse;
 import com.yuanshenbin.network.AbstractResponseUpload;
+import com.yuanshenbin.network.DefaultNetwork;
 import com.yuanshenbin.network.IDialog;
+import com.yuanshenbin.network.INetworkLinstener;
 import com.yuanshenbin.network.ResponseEnum;
 import com.yuanshenbin.network.SSLContextUtil;
 import com.yuanshenbin.util.ILogger;
@@ -68,6 +70,8 @@ public class RequestManager {
 
     private static RequestQueue mRequestQueue;
     private static DownloadQueue mDownloadQueue;
+
+    private static INetworkLinstener mLinstener = new DefaultNetwork();
 
     /**
      * `
@@ -288,7 +292,9 @@ public class RequestManager {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.成功);
                     l.onSuccess(response.get());
-                    l.onSuccess(what, response);
+                }
+                if (mLinstener != null) {
+                    mLinstener.onRecordLog(response);
                 }
             }
 
@@ -297,7 +303,9 @@ public class RequestManager {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.失败);
                     l.onFailed();
-                    l.onFailed(what, response);
+                    if (mLinstener != null) {
+                        mLinstener.onRecordLog(response);
+                    }
                 }
                 ILogger.d("", response.getException());
             }
@@ -478,7 +486,6 @@ public class RequestManager {
                 if (l != null) {
                     l.onResponseState(ResponseEnum.成功);
                     l.onSuccess(response.get());
-                    l.onSuccess(what, response);
                 }
             }
 
