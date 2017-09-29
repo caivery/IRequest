@@ -17,16 +17,15 @@ import com.yanzhenjie.nohttp.rest.RequestQueue;
 import com.yanzhenjie.nohttp.rest.Response;
 import com.yanzhenjie.nohttp.rest.StringRequest;
 import com.yanzhenjie.nohttp.rest.SyncRequestExecutor;
+import com.yuanshenbin.bean.ResponseModel;
 import com.yuanshenbin.bean.UploadFile;
 import com.yuanshenbin.network.AbstractResponse;
 import com.yuanshenbin.network.AbstractResponseUpload;
-import com.yuanshenbin.network.DefaultNetwork;
-import com.yuanshenbin.network.IDialog;
-import com.yuanshenbin.network.INetworkLinstener;
+import com.yuanshenbin.network.INetDialog;
 import com.yuanshenbin.network.ResponseEnum;
 import com.yuanshenbin.network.SSLContextUtil;
-import com.yuanshenbin.util.ILogger;
 import com.yuanshenbin.util.JsonUtils;
+import com.yuanshenbin.util.YJPLog;
 import com.yuanshenbin.widget.DefaultDialog;
 
 import java.lang.reflect.ParameterizedType;
@@ -36,11 +35,14 @@ import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLContext;
 
-
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 
 /**
@@ -48,12 +50,6 @@ import io.reactivex.annotations.NonNull;
  */
 public class RequestManager {
 
-
-    private static IDialog iDialog = new DefaultDialog();
-
-    public static void setDialog(IDialog dialog) {
-        iDialog = dialog;
-    }
 
     /**
      * rx需要用的线程池
@@ -71,10 +67,7 @@ public class RequestManager {
     private static RequestQueue mRequestQueue;
     private static DownloadQueue mDownloadQueue;
 
-    private static INetworkLinstener mLinstener = new DefaultNetwork();
-
     /**
-     * `
      * 数据请求的Queue
      *
      * @return
@@ -122,6 +115,8 @@ public class RequestManager {
             }
         }
     }
+    private static INetDialog iDialog = new DefaultDialog(); 
+    
 
     private RequestManager() {
 
@@ -149,13 +144,14 @@ public class RequestManager {
     public static <T> Observable<T> upload(final BaseRequest params, final Class<T> classOfT) {
         //放到线程池中，实现队列
         getQueue().submit(new RequestThreadQueue(params));
-        return Observable.create(new ObservableOnSubscribe<T>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
-                try {
-                    while (params.isWait) {
 
-                    }
+        return Observable.create(new ObservableOnSubscribe<Response<String>>() {
+            @Override
+            public void subscribe(@NonNull ObservableEmitter<Response<String>> e) {
+                while (params.isWait) {
+
+                }
+                try {
                     Request<String> request = new StringRequest(params.url, RequestMethod.POST);
                     request.setConnectTimeout(params.timeOut);
                     request.setRetryCount(params.retry);
@@ -163,7 +159,6 @@ public class RequestManager {
                     if (sslContext != null) {
                         request.setSSLSocketFactory(sslContext.getSocketFactory());
                     }
-
                     /**
                      * 给上传文件做个监听，可以不需要
                      */
@@ -176,34 +171,57 @@ public class RequestManager {
                         request.add("", fileBinary);
                     }
                     final Response<String> response = SyncRequestExecutor.INSTANCE.execute(request);
-                    if (response.isSucceed()) {
-                        String json = response.get();
-                        ILogger.json(json);
-                        e.onNext(JsonUtils.object(json, classOfT));
-                    } else {
-                        e.onError(response.getException());
-                    }
+
+                    e.onNext(response);
                 } catch (Exception exception) {
                     e.onError(exception);
-                    ILogger.d("", exception);
+                    params.isQueueEnd = true;
                 }
-                params.isQueueEnd = true;
                 e.onComplete();
             }
-        });
+        }).observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Response<String>, ObservableSource<T>>() {
+                    @Override
+                    public ObservableSource<T> apply(@NonNull final Response<String> stringResponse) {
+                        return Observable.create(new ObservableOnSubscribe<T>() {
+                            @Override
+                            public void subscribe(@NonNull ObservableEmitter<T> e) {
+                                final Response<String> response = stringResponse;
+                                try {
+                                    if (response.isSucceed()) {
+                                        String json = response.get();
+                                        if (classOfT.equals(String.class)) {
+                                            e.onNext((T) json);
+                                        } else {
+                                            e.onNext(JsonUtils.object(json, classOfT));
+                                        }
+                                    } else {
+                                        e.onError(response.getException());
+                                    }
+                                } catch (Exception exception) {
+                                    e.onError(exception);
+
+                                } finally {
+                                    params.isQueueEnd = true;
+                                }
+                                e.onComplete();
+                            }
+                        }).subscribeOn(Schedulers.io());
+                    }
+                });
+
     }
 
     public static <T> Observable<T> load(final BaseRequest params, final Class<T> classOfT) {
         //放到线程池中，实现队列
         getQueue().submit(new RequestThreadQueue(params));
-        return Observable.create(new ObservableOnSubscribe<T>() {
+        return Observable.create(new ObservableOnSubscribe<Response<String>>() {
             @Override
-            public void subscribe(@NonNull ObservableEmitter<T> e) throws Exception {
+            public void subscribe(@NonNull ObservableEmitter<Response<String>> e) {
+                while (params.isWait) {
+
+                }
                 try {
-                    while (params.isWait) {
-
-                    }
-
                     Request<String> request = new StringRequest(params.url, params.requestMethod);
                     if (RequestMethod.POST == params.requestMethod) {
                         request.setDefineRequestBodyForJson(params.params);
@@ -218,25 +236,44 @@ public class RequestManager {
                     }
 
                     final Response<String> response = SyncRequestExecutor.INSTANCE.execute(request);
-                    if (response.isSucceed()) {
-                        String json = response.get();
-                        ILogger.json(json);
-                        if (classOfT.equals(String.class)) {
-                            e.onNext((T) json);
-                        } else {
-                            e.onNext(JsonUtils.object(json, classOfT));
-                        }
-                    } else {
-                        e.onError(response.getException());
-                    }
+                    e.onNext(response);
                 } catch (Exception exception) {
                     e.onError(exception);
-                    ILogger.d("", exception);
+                    params.isQueueEnd = true;
                 }
-                params.isQueueEnd = true;
                 e.onComplete();
             }
-        });
+        }).observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<Response<String>, ObservableSource<T>>() {
+                    @Override
+                    public ObservableSource<T> apply(@NonNull final Response<String> stringResponse) {
+                        return Observable.create(new ObservableOnSubscribe<T>() {
+                            @Override
+                            public void subscribe(@NonNull ObservableEmitter<T> e) {
+                                final Response<String> response = stringResponse;
+                                try {
+                                    if (response.isSucceed()) {
+                                        String json = response.get();
+                                        if (classOfT.equals(String.class)) {
+                                            e.onNext((T) json);
+                                        } else {
+                                            e.onNext(JsonUtils.object(json, classOfT));
+                                        }
+                                    } else {
+                                        e.onError(response.getException());
+                                    }
+                                } catch (Exception exception) {
+                                    e.onError(exception);
+
+                                } finally {
+                                    params.isQueueEnd = true;
+                                }
+                                e.onComplete();
+                            }
+                        }).subscribeOn(Schedulers.io());
+                    }
+                });
+
     }
 
     /**
@@ -256,13 +293,12 @@ public class RequestManager {
         if (RequestMethod.POST == params.requestMethod) {
             request.setDefineRequestBodyForJson(params.params);
         }
-
-
         iDialog.init(params.context);
         iDialog.setCancelable(params.isCloseDialog);
         if (!TextUtils.isEmpty(params.loadingTitle)) {
             iDialog.setMessage(params.loadingTitle);
         }
+
         SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();
         if (sslContext != null) {
             request.setSSLSocketFactory(sslContext.getSocketFactory());
@@ -276,46 +312,39 @@ public class RequestManager {
          * 如果有头部请求则调用getHeader
          * 把自己需要定义的参数都传过去即可
          */
-        //getHeader(request);
         getInstance().add(params.what, request, new OnResponseListener<T>() {
             @Override
             public void onStart(int what) {
+                if (iDialog != null && params.isLoading)
+                    iDialog.show();
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.开始);
-                    if (iDialog != null && params.isLoading)
-                        iDialog.show();
+                    l.onResponseState(new ResponseModel(ResponseEnum.开始));
                 }
             }
 
             @Override
             public void onSucceed(int what, Response<T> response) {
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.成功);
+                    l.onResponseState(new ResponseModel(ResponseEnum.成功));
                     l.onSuccess(response.get());
-                }
-                if (mLinstener != null) {
-                    mLinstener.onRecordLog(response);
                 }
             }
 
             @Override
             public void onFailed(int what, Response<T> response) {
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.失败);
+                    l.onResponseState(new ResponseModel(ResponseEnum.失败,response.getException()));
                     l.onFailed();
-                    if (mLinstener != null) {
-                        mLinstener.onRecordLog(response);
-                    }
                 }
-                ILogger.d("", response.getException());
+                YJPLog.d("", response.getException());
             }
 
             @Override
             public void onFinish(int what) {
+                if (iDialog != null && params.isLoading)
+                    iDialog.dismiss();
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.结束);
-                    if (iDialog != null && params.isLoading)
-                        iDialog.dismiss();
+                    l.onResponseState(new ResponseModel(ResponseEnum.结束));
                 }
             }
         });
@@ -338,7 +367,10 @@ public class RequestManager {
         final DownloadRequest request = NoHttp.createDownloadRequest(url, fileFolder, filename, isRange, isDeleteOld);
         request.setTag(context);
         request.setCancelSign(context);
-
+        SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();
+        if (sslContext != null) {
+            request.setSSLSocketFactory(sslContext.getSocketFactory());
+        }
         getInstance1().add(what, request, new DownloadListener() {
 
             @Override
@@ -397,6 +429,11 @@ public class RequestManager {
         if (!TextUtils.isEmpty(params.params)) {
             request.setDefineRequestBodyForJson(params.params);
         }
+
+        SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();
+        if (sslContext != null) {
+            request.setSSLSocketFactory(sslContext.getSocketFactory());
+        }
         /**
          * 给上传文件做个监听，可以不需要
          */
@@ -454,37 +491,35 @@ public class RequestManager {
                     }
                 }
             });
-            /**
-             * 这个key可以不传
-             * 目前没发现有什么不一样的
-             */
-            request.add("", fileBinary);
         }
+
+        iDialog.init(params.context);
+        iDialog.setCancelable(params.isCloseDialog);
+        if (!TextUtils.isEmpty(params.loadingTitle)) {
+            iDialog.setMessage(params.loadingTitle);
+        }
+
+
         /**
          * 如果有头部请求则调用getHeader
          * 把自己需要定义的参数都传过去即可
          */
         //getHeader(request);
         request.setTag(params.context);
-        iDialog.init(params.context);
-        iDialog.setCancelable(params.isCloseDialog);
-        if (!TextUtils.isEmpty(params.loadingTitle)) {
-            iDialog.setMessage(params.loadingTitle);
-        }
         getInstance().add(params.what, request, new OnResponseListener<T>() {
             @Override
             public void onStart(int what) {
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.开始);
-                    if (iDialog != null && params.isLoading)
-                        iDialog.show();
+                    l.onResponseState(new ResponseModel(ResponseEnum.开始));
                 }
+                if (iDialog != null && params.isLoading)
+                    iDialog.show();
             }
 
             @Override
             public void onSucceed(int what, Response<T> response) {
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.成功);
+                    l.onResponseState(new ResponseModel(ResponseEnum.成功));
                     l.onSuccess(response.get());
                 }
             }
@@ -492,19 +527,17 @@ public class RequestManager {
             @Override
             public void onFailed(int what, Response<T> response) {
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.失败);
+                    l.onResponseState(new ResponseModel(ResponseEnum.失败,response.getException()));
                     l.onFailed();
-                    l.onFailed(what, response);
                 }
-                ILogger.d("", response.getException());
             }
 
             @Override
             public void onFinish(int what) {
+                if (iDialog != null && params.isLoading)
+                    iDialog.dismiss();
                 if (l != null) {
-                    l.onResponseState(ResponseEnum.结束);
-                    if (iDialog != null && params.isLoading)
-                        iDialog.dismiss();
+                    l.onResponseState(new ResponseModel(ResponseEnum.结束));
                 }
             }
         });
@@ -513,5 +546,9 @@ public class RequestManager {
 
     public static void clearAll() {
         getInstance().cancelAll();
+    }
+    
+    public static void clear(Context context) {
+        getInstance().cancelBySign(context);
     }
 }

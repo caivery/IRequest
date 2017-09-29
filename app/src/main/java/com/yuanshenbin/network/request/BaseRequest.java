@@ -69,11 +69,11 @@ public abstract class BaseRequest<T extends BaseRequest> {
     /**
      * 是否断点续传下载 默认是
      **/
-    protected boolean isRange = true;
+    protected boolean isRange = false;
     /**
      * 如果发现文件已经存在是否删除后重新下载
      **/
-    protected boolean isDeleteOld = false;
+    protected boolean isDeleteOld = true;
 
     protected RequestMethod requestMethod = RequestMethod.GET;
 
@@ -98,7 +98,9 @@ public abstract class BaseRequest<T extends BaseRequest> {
     /**
      * 是否禁止手动关闭对话框
      */
-    protected boolean isCloseDialog; 
+    protected boolean isCloseDialog;
+
+
 
     public T loading(boolean loading) {
         this.isLoading = loading;

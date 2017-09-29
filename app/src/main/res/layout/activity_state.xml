@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:text="error"
+            android:id="@+id/btn1"
+            android:layout_weight="1"
+            android:layout_width="0dip"
+            android:layout_height="50dip" />
+        <Button
+            android:text="timeout"
+            android:id="@+id/btn2"
+            android:layout_weight="1"
+            android:layout_width="0dip"
+            android:layout_height="50dip"/>
+        
+    </LinearLayout>
+    <TextView
+        android:layout_centerInParent="true"
+        android:textSize="44sp"
+        android:text="展示数据"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/ll_state"
+        android:background="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dip"></LinearLayout>
+</RelativeLayout>

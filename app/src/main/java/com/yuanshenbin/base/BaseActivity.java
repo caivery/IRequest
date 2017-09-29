@@ -10,7 +10,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
-import com.yuanshenbin.util.ILogger;
+import com.yanzhenjie.nohttp.error.NetworkError;
+import com.yanzhenjie.nohttp.error.TimeoutError;
+import com.yuanshenbin.bean.ResponseModel;
+import com.yuanshenbin.state.EmptyState;
+import com.yuanshenbin.state.ErrorState;
+import com.yuanshenbin.state.LoadingState;
+import com.yuanshenbin.state.NetworkState;
+import com.yuanshenbin.state.OnRetryListener;
+import com.yuanshenbin.state.StateLayoutManager;
+import com.yuanshenbin.state.TimeOutState;
+import com.yuanshenbin.util.YJPLog;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -60,11 +70,27 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
 
+
+    protected StateLayoutManager mStateLayoutManager;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(initLayoutId());
+        //暂时写个空  ，后面自己传你布局的id
+        mStateLayoutManager = new StateLayoutManager.Builder(this, null)
+                .emptyStateView(new EmptyState())
+                .errorStateView(new ErrorState())
+                .timeOutStateView(new TimeOutState())
+                .loadingStateView(new LoadingState())
+                .networkStateView(new NetworkState(new OnRetryListener() {
+                    @Override
+                    public void onRetry() {
+
+                    }
+                }))
+                .build();
     }
 
     @Override
@@ -78,7 +104,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             try {
                 EventBus.getDefault().register(this);
             } catch (Exception e) {
-                ILogger.e(TAG,e);
+                YJPLog.e(TAG,e);
             }
         }
         initDatas();
@@ -95,7 +121,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             try {
                 EventBus.getDefault().register(this);
             } catch (Exception e) {
-                ILogger.e(TAG,e);
+                YJPLog.e(TAG,e);
             }
         }
         initDatas();
@@ -201,7 +227,35 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected <T extends View> T findView(int resId) {
         return (T) (findViewById(resId));
     }
-
+    /**
+     * 页面加载状态
+     *
+     * @param model
+     */
+    protected void setStateLayout(ResponseModel model) {
+        if (mStateLayoutManager != null) {
+            switch (model.getState()) {
+                case 开始:
+                    mStateLayoutManager.showLoading();
+                    break;
+                case 成功:
+                    mStateLayoutManager.showContent();
+                    break;
+                case 结束:
+                    break;
+                case 失败:
+                    if (model.getException() != null) {
+                        if (model.getException() instanceof NetworkError) {
+                            mStateLayoutManager.showNetwork();
+                        } else if (model.getException() instanceof TimeoutError) {
+                            mStateLayoutManager.showTimeOut();
+                        }
+                    }
+                    break;
+                default:
+            }
+        }
+    }
 
     /**
      * 改变系统字体不影响app的字体
@@ -218,7 +272,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             return res;
         } catch (Exception e) {
 
-            ILogger.e(TAG,e);
+            YJPLog.e(TAG,e);
             return super.getResources();
         }
     }
@@ -231,7 +285,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             try {
                 EventBus.getDefault().unregister(this);
             } catch (Exception e) {
-                ILogger.e(TAG,e);
+                YJPLog.e(TAG,e);
             }
         }
     }

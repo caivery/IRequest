@@ -4,6 +4,7 @@ package com.yuanshenbin.network;
 import android.widget.Toast;
 
 import com.yuanshenbin.app.App;
+import com.yuanshenbin.bean.ResponseModel;
 
 
 /**
@@ -17,9 +18,14 @@ public abstract class AbstractResponse<T> {
         Toast.makeText(App.getInstance(), "网络不给力···", Toast.LENGTH_SHORT).show();
     }
 
-
-    public void onResponseState(ResponseEnum result) {
+    public void onResponseState(ResponseModel result) {
 
     }
+
+
+    public void onEmptyData(){
+
+    }
+
 
 }

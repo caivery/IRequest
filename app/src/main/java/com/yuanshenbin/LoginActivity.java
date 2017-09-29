@@ -43,7 +43,6 @@ public class LoginActivity extends BaseMVPActivity<LoginContract.View, LoginPres
 
     @Override
     protected void initDatas() {
-        IShowToast("initDatas");
     }
 
     @Override

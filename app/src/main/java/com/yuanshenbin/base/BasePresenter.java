@@ -13,6 +13,7 @@ public class BasePresenter<V> {
     public V mView;
     public CompositeDisposable mDisposable;
     public Context mContext;
+    
 
     public void attach(V view, Context context) {
         mView = view;

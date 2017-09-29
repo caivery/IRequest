@@ -5,17 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.yanzhenjie.nohttp.Headers;
-import com.yanzhenjie.nohttp.download.DownloadListener;
-import com.yuanshenbin.bean.TestEvent;
 import com.yuanshenbin.network.AbstractResponse;
-import com.yuanshenbin.network.AbstractResponseUpload;
-import com.yuanshenbin.network.ResponseEnum;
 import com.yuanshenbin.network.request.IRequest;
-
-import org.greenrobot.eventbus.EventBus;
-
-import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,8 +14,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        
 
 
         /**
@@ -85,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         String mUrl = "http://image.baidu.com/channel/listjson?pn=" + 1
                 + "&rn=" + 22
                 + "&tag1=%E6%98%8E%E6%98%9F&tag2=%E5%85%A8%E9%83%A8";
-        IRequest.get(this, mUrl)
+        IRequest.get(this, "http://192.168.1.1/")
                 .params("", "")
                 .loading(true)
                 .execute(new AbstractResponse<String>() {
@@ -94,67 +83,70 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-
-        IRequest.get(this, "")
-                .execute(new AbstractResponse<File>() {
-                    @Override
-                    public void onSuccess(File result) {
-
-                    }
-
-                    @Override
-                    public void onResponseState(ResponseEnum result) {
-                    }
-                });
-        IRequest.upload(this, "")
-                .execute(new AbstractResponseUpload<String>() {
-                    @Override
-                    public void onSuccess(String result) {
-
-                    }
-
-                    @Override
-                    public void onResponseState(ResponseEnum result) {
-                    }
-
-                });
-        IRequest.download(this, "")
-                .execute(new DownloadListener() {
-                    @Override
-                    public void onDownloadError(int what, Exception exception) {
-
-                    }
-
-                    @Override
-                    public void onStart(int what, boolean isResume, long rangeSize, Headers responseHeaders, long allCount) {
-
-                    }
-
-                    @Override
-                    public void onProgress(int what, int progress, long fileCount, long speed) {
-
-                    }
-
-                    @Override
-                    public void onFinish(int what, String filePath) {
-
-                    }
-
-                    @Override
-                    public void onCancel(int what) {
-
-                    }
-                });
+//
+//        IRequest.get(this, "")
+//                .execute(new AbstractResponse<File>() {
+//                    @Override
+//                    public void onSuccess(File result) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onResponseState(ResponseEnum result) {
+//                    }
+//                });
+//        IRequest.upload(this, "")
+//                .execute(new AbstractResponseUpload<String>() {
+//                    @Override
+//                    public void onSuccess(String result) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onResponseState(ResponseEnum result) {
+//                    }
+//
+//                });
+//        IRequest.download(this, "")
+//                .execute(new DownloadListener() {
+//                    @Override
+//                    public void onDownloadError(int what, Exception exception) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onStart(int what, boolean isResume, long rangeSize, Headers responseHeaders, long allCount) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onProgress(int what, int progress, long fileCount, long speed) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onFinish(int what, String filePath) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onCancel(int what) {
+//
+//                    }
+//                });
         findViewById(R.id.btn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
 
-                EventBus.getDefault().postSticky(new TestEvent());
-                
+
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
             }
         });
 
+
+
+
+        
     }
 }

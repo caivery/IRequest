@@ -6,8 +6,8 @@ import com.yanzhenjie.nohttp.Headers;
 import com.yanzhenjie.nohttp.RequestMethod;
 import com.yanzhenjie.nohttp.rest.RestRequest;
 import com.yanzhenjie.nohttp.rest.StringRequest;
-import com.yuanshenbin.util.ILogger;
 import com.yuanshenbin.util.JsonUtils;
+import com.yuanshenbin.util.YJPLog;
 
 /**
  * Created by Jacky on 2016/10/31.
@@ -25,10 +25,10 @@ public class ArrayRequest<T> extends RestRequest<T> {
     public T parseResponse(Headers responseHeaders, byte[] responseBody) throws Exception {
         String result = StringRequest.parseResponseString(responseHeaders, responseBody);
         if (TextUtils.isEmpty(result)) {
-            ILogger.e("", new NullPointerException());
+            YJPLog.e("", new NullPointerException());
             throw new NullPointerException();
         } else {
-            ILogger.json(result);
+            YJPLog.json(result);
             return JsonUtils.object(result, classOfT);
         }
     }

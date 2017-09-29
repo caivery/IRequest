@@ -11,13 +11,13 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.yuanshenbin.R;
-import com.yuanshenbin.network.IDialog;
+import com.yuanshenbin.network.INetDialog;
 
 /**
  * Created by yuanshenbin on 2017/6/22.
  */
 
-public class DefaultDialog implements IDialog {
+public class DefaultDialog implements INetDialog {
     private LayoutInflater inflater;
     private WindowManager.LayoutParams lp;
     private TextView loadtext;

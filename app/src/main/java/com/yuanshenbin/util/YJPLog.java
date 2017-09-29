@@ -7,7 +7,7 @@ import com.orhanobut.logger.Logger;
  * Created by yuanshenbin on 2017/6/30.
  */
 
-public class ILogger {
+public class YJPLog {
     /**
      * General log function that accepts all configurations as parameter
      */

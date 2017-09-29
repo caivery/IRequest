@@ -1,63 +1,68 @@
 package com.yuanshenbin.rx;
 
 
-import android.content.Context;
 import android.widget.Toast;
 
-import com.yuanshenbin.network.IDialog;
-import com.yuanshenbin.util.ILogger;
-import com.yuanshenbin.widget.DefaultDialog;
+import com.yuanshenbin.base.BasePresenter;
+import com.yuanshenbin.bean.ResponseModel;
+import com.yuanshenbin.network.ResponseEnum;
 
 import java.io.IOException;
 
 import io.reactivex.Observer;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 
 /**
- * Created by yuanshenbin on 2017/7/6.
+ * author : yuanshenbin
+ * time   : 2017/9/25
+ * desc   :
  */
-
 public abstract class NetObserver<T> implements Observer<T> {
 
-    private boolean isLoading;
-    private Context mContext;
-    private IDialog mDialog;
+    private BasePresenter mPresenter;
+    
+    private boolean isLoading =false;
 
-    public NetObserver(Context context, boolean loading) {
-        isLoading = loading;
-        this.mContext = context;
-        showLoading();
+    public void onResponseState(ResponseModel result) {
+
     }
+
+    public NetObserver(BasePresenter presenter,boolean loading) {
+        this.mPresenter = presenter;
+        this.isLoading =loading;
+        onResponseState(new ResponseModel(ResponseEnum.开始));
+    }
+
     @Override
     public void onError(Throwable e) {
         //统一处理请求异常的情况
         if (e instanceof IOException) {
-            Toast.makeText(mContext, "网络链接异常...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mPresenter.mContext, "网络链接异常...", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mPresenter.mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-        ILogger.e("rx", e);
+        onResponseState(new ResponseModel(ResponseEnum.失败,e));
 
     }
 
     @Override
     public void onComplete() {
-        cancelLoading();
+        onResponseState(new ResponseModel(ResponseEnum.结束));
     }
 
-    /**
-     * 可在此处统一显示loading view
-     */
-    private void showLoading() {
-        if (isLoading) {
-            mDialog = new DefaultDialog();
-            mDialog.init(mContext);
-            mDialog.show();
-        }
+
+    @Override
+    public void onNext(@NonNull T t) {
+        onResponseState(new ResponseModel(ResponseEnum.成功));
+        _onNext(t);
     }
 
-    private void cancelLoading() {
-        if (mDialog != null)
-            mDialog.dismiss();
-    }
+    public abstract void _onNext(@NonNull T t);
 
+    @Override
+    public void onSubscribe(@NonNull Disposable d) {
+        if (mPresenter != null)
+            mPresenter.mDisposable.add(d);
+    }
 }

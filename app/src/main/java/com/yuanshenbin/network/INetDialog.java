@@ -6,7 +6,7 @@ import android.content.Context;
  * Created by yuanshenbin on 2017/6/22.
  */
 
-public interface IDialog {
+public interface INetDialog {
     /**
      * 初始化
      *
